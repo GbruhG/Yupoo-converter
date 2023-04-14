@@ -1,0 +1,21 @@
+{
+    "manifest_version": 2,
+    "name": "Yupoo Converter",
+    "version": "1.0",
+    "description": "Converts Yuan on the site yupoo to a desired currency.",
+    "content_scripts": [
+      {
+        "matches": ["<all_urls>"],
+        "js": ["content.js"]
+      }
+    ],
+    "browser_action": {
+      "default_popup": "popup.html",
+      "default_icon": {
+        "16": "icon16.png",
+        "32": "icon32.png"
+      }
+    },
+    "permissions": ["activeTab", "storage"]
+  }
+  
