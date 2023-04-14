@@ -1,4 +1,3 @@
-
 function convertYuanToCustomCurrency(currencyValue) {
     return new Promise((resolve, reject) => {
         chrome.storage.sync.get(['currency'], (result) => {
@@ -18,7 +17,7 @@ function convertYuanToCustomCurrency(currencyValue) {
                 convertedValue = currencyValue; // no conversion needed
             }
 
-            const formattedValue = new Intl.NumberFormat('en-US', {
+            const formattedValue = new Intl.NumberFormat('en-US', { //formats the value for desired currency
                 style: 'currency',
                 currency: selectedCurrency,
             }).format(convertedValue);
@@ -28,37 +27,72 @@ function convertYuanToCustomCurrency(currencyValue) {
 }
 
 function replaceYuanWithCustomCurrency() {
-    let elements = document.querySelectorAll(".text_overflow.album__title");
 
-    if (elements.length === 0) { //check if empty because there can be different classes
-        elements = document.querySelectorAll(".album3__title");
-    }
-    if(elements.length === 0){ //check if empty because there can be different classes
-        elements = document.querySelectorAll(".showalbumheader__gallerytitle");
-    }
+    const classNames = [  '.text_overflow.album__title',  '.album3__title',  '.showalbumheader__gallerytitle',  '.album4__title',]; //there can be 4 differently named classes containing an item value on a yupoo page, none of them will exist at the same time
+
+    let elements;
     
-    const regex = /(\d+)?\s*([￥¥])\s*(\.\s*)?~?\s*([\d,]+(\.\d+)?)/g;
-    
-    elements.forEach(element => {
-        const match = element.innerText.match(regex);
-        if (match) {
-            match.forEach(m => {
-                const value = m.replace(/\s/g, '').replace(/(￥|¥|¥\.~|¥\.\s~|¥\s~|￥|￥\.~|￥\.\s~|￥\s~|\¥|[,.~])/g, '').match(/\d+(\.\d+)?/);
-                if (value) {
-                    convertYuanToCustomCurrency(parseFloat(value[0]))
-                        .then(formattedValue => {
-                            const newText = element.innerText.replace(m, formattedValue);
-                            element.innerText = newText;
-                        })
-                        .catch(error => {
-                            console.error(error);
-                        });
-                }
-            });
-        }
+    for (let i = 0; i < classNames.length; i++) { //check all the elements
+      elements = document.querySelectorAll(classNames[i]);
+      if (elements.length > 0) {
+        break;
+      }
+    }
+
+    //console.log(elements);
+
+
+    const regexPatterns = [
+        /(\d+)?\s*([￥¥])\s*(\.\s*)?~?\s*([\d,]+(\.\d+)?)/g, //matches "￥890", "￥ 890", "890 ￥" and similar
+        /P\s*[:：]?\s*(\d+)/gi, // matches "P890", "P: 896" and similar
+        /Price\D*(\d+)\s*(?:Yuan|CNY|RMB)?/gi, // matches "Price:379", "Price：249Yuan", "price: 258CNY" and similar
+        /(\d+)\s*(?:Yuan|CNY|RMB)/g, // matches "238CNY", "CNY250", "CNY 330", "【430RMB】" and similar
+    ];
+
+    elements.forEach(element => { //loops through all the found elements and replaces the Yuan value with the desired currency value
+        console.log(element.innerText);
+        regexPatterns.forEach(pattern => {
+            const match = element.innerText.match(pattern);
+            if (match) {
+                match.forEach(m => {
+                    const value = m.replace(/\s/g, '').replace(/[^\d.]/g, '');
+                    if (value) {
+                        convertYuanToCustomCurrency(parseFloat(value))
+                            .then(formattedValue => {
+                                const newText = element.innerText.replace(m, formattedValue);
+                                element.innerText = newText;
+                            })
+                            .catch(error => {
+                                console.error(error);
+                            });
+                    }
+                });
+            }
+        });
     });
 }
 
+replaceYuanWithCustomCurrency(); //runs main function
 
 
-replaceYuanWithCustomCurrency();
+
+
+function debounce(func, wait) { //delays the desired executed function
+    let timeout;
+
+    return function executedFunction(...args) {
+        const later = () => {
+            timeout = null;
+            func(...args);
+        };
+
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+const observer = new MutationObserver(debounce(replaceYuanWithCustomCurrency, 500)); // listens for changes to the DOM (like scrolling and elements not being loaded instantly) and runs the function again, 
+observer.observe(document, {                                                        //it uses the debounce function for performance reasons and to not be called multiple times for no reason
+    subtree: true,
+    childList: true
+});
