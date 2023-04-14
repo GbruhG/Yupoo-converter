@@ -28,19 +28,22 @@ function convertYuanToCustomCurrency(currencyValue) {
 
 function replaceYuanWithCustomCurrency() {
 
-    const classNames = [  '.text_overflow.album__title',  '.album3__title',  '.showalbumheader__gallerytitle',  '.album4__title',]; //there can be 4 differently named classes containing an item value on a yupoo page, none of them will exist at the same time
+    const classNames = ['.text_overflow.album__title', //there can be 4 differently named classes containing an item value on a yupoo page, none of them will exist at the same time
+        '.album3__title',
+        '.showalbumheader__gallerytitle',
+        '.album4__title',
+    ];
 
     let elements;
-    
+
     for (let i = 0; i < classNames.length; i++) { //check all the elements
-      elements = document.querySelectorAll(classNames[i]);
-      if (elements.length > 0) {
-        break;
-      }
+        elements = document.querySelectorAll(classNames[i]);
+        if (elements.length > 0) {
+            break;
+        }
     }
 
     //console.log(elements);
-
 
     const regexPatterns = [
         /(\d+)?\s*([￥¥])\s*(\.\s*)?~?\s*([\d,]+(\.\d+)?)/g, //matches "￥890", "￥ 890", "890 ￥" and similar
@@ -50,7 +53,7 @@ function replaceYuanWithCustomCurrency() {
     ];
 
     elements.forEach(element => { //loops through all the found elements and replaces the Yuan value with the desired currency value
-        console.log(element.innerText);
+        console.log('yo');
         regexPatterns.forEach(pattern => {
             const match = element.innerText.match(pattern);
             if (match) {
@@ -92,7 +95,7 @@ function debounce(func, wait) { //delays the desired executed function
 }
 
 const observer = new MutationObserver(debounce(replaceYuanWithCustomCurrency, 500)); // listens for changes to the DOM (like scrolling and elements not being loaded instantly) and runs the function again, 
-observer.observe(document, {                                                        //it uses the debounce function for performance reasons and to not be called multiple times for no reason
+observer.observe(document, { //it uses the debounce function for performance reasons and to not be called multiple times for no reason
     subtree: true,
     childList: true
 });
