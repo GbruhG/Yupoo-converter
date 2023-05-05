@@ -2,9 +2,9 @@ function convertYuanToCustomCurrency(currencyValue) {
     return new Promise((resolve, reject) => {
         chrome.storage.sync.get(['currency'], (result) => {
             const selectedCurrency = result.currency || 'USD'; // default to '$' if no currency is selected
-            const exchangeRateUSD = 6.86755431;
-            const exchangeRateEUR = 7.58513932;
-            const exchangeRateGBP = 8.60403863;
+            const exchangeRateUSD = 6.36523266;
+            const exchangeRateEUR = 7.01160542;
+            const exchangeRateGBP = 8.02434975;
             let convertedValue;
 
             if (selectedCurrency === 'USD') {
@@ -47,6 +47,7 @@ function replaceYuanWithCustomCurrency() {
 
     const regexPatterns = [
         /(\d+)?\s*([￥¥])\s*(\.\s*)?~?\s*([\d,]+(\.\d+)?)/g, //matches "￥890", "￥ 890", "890 ￥" and similar
+        /(\d+)([￥¥])/g, //matches only "190¥" because previous regex bugged
         /P\s*[:：]?\s*(\d+)/gi, // matches "P890", "P: 896" and similar
         /Price\D*(\d+)\s*(?:Yuan|CNY|RMB)?/gi, // matches "Price:379", "Price：249Yuan", "price: 258CNY" and similar
         /(\d+)\s*(?:Yuan|CNY|RMB)/g, // matches "238CNY", "CNY250", "CNY 330", "【430RMB】" and similar
@@ -58,7 +59,7 @@ function replaceYuanWithCustomCurrency() {
             const match = element.innerText.match(pattern);
             if (match) {
                 match.forEach(m => {
-                    const value = m.replace(/\s/g, '').replace(/[^\d.]/g, '');
+                    const value = m.replace(/\s/g, '').replace(/[^\d.,-]/g, '').replace(/[,.-](?=.*[,.-])/g, '').replace(/^\.+/, '').replace(/\.(?=.*\.)/g, ''); //removes everything from string but the number
                     if (value) {
                         convertYuanToCustomCurrency(parseFloat(value))
                             .then(formattedValue => {
