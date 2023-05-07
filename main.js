@@ -12,6 +12,7 @@ function convertYuanToCustomCurrency(currencyValue) {
                 exchangeRate = 8.02434975;
             }
 
+            //converts the value
             const convertedValue = currencyValue / exchangeRate;
 
             // format the converted value as a currency string in the selected currency
